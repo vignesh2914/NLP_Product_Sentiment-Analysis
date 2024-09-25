@@ -186,11 +186,43 @@ def save_product_data_to_csv(job_data: List[Dict[str, str]], Product_keyword: st
             # Directly use job_data without specifying column names again
             df = pd.DataFrame(job_data)
 
-            folder_name = "job_data"  # Use the existing folder name
+            folder_name = "Product_Review_data"  # Use the existing folder name
             os.makedirs(folder_name, exist_ok=True)  # Ensure the folder exists
 
             current_datetime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             csv_file_path = os.path.join(folder_name, f"{current_datetime}_{Product_keyword}_{product_code}.csv")
+
+            df.to_csv(csv_file_path, index=False)
+            logging.info(f"Fetched product data saved in CSV file successfully: {csv_file_path}")
+            return csv_file_path
+        else:
+            logging.info("No recent data found to save.")
+    except Exception as e:
+        logging.error(f"An error occurred while saving CSV: {e}")
+        raise CustomException(e, sys)
+    
+def save_product_data_to_csv(job_data: List[Dict[str, str]], Product_keyword: str, product_code: str, filter_option: int) -> Optional[str]:
+    try:
+        if job_data:
+            # Directly use job_data without specifying column names again
+            df = pd.DataFrame(job_data)
+
+            folder_name = "Product_Review_data"  # Use the existing folder name
+            os.makedirs(folder_name, exist_ok=True)  # Ensure the folder exists
+
+            # Map filter option to review type
+            filter_map = {
+                1: "1_star",
+                2: "2_star",
+                3: "3_star",
+                4: "4_star",
+                5: "5_star",
+                6: "all_reviews"
+            }
+            filter_name = filter_map.get(filter_option, "unknown")
+
+            current_datetime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            csv_file_path = os.path.join(folder_name, f"{current_datetime}_{Product_keyword}_{product_code}_{filter_name}.csv")
 
             df.to_csv(csv_file_path, index=False)
             logging.info(f"Fetched product data saved in CSV file successfully: {csv_file_path}")
@@ -205,11 +237,11 @@ if __name__ == "__main__":
     try:
         Product_keyword = "OptimumNutrition"
         product_code = "B0BBR11HM9"
-        filter_option = 1  # Example for one-star reviews
+        filter_option = 5  # Example for one-star reviews
 
         scraped_data = scrape_product_data(Product_keyword, product_code, filter_option)
         df = create_dataframe_of_product_data(scraped_data)
-        save_product_data_to_csv(scraped_data, Product_keyword, product_code)
+        save_product_data_to_csv(scraped_data, Product_keyword, product_code, filter_option)
 
     except CustomException as e:
         logging.error(f"An error occurred in the main flow: {e}")
